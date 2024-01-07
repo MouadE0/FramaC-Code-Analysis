@@ -1,0 +1,13 @@
+[ { "prover": "CVC4:1.7", "verdict": "timeout", "time": 10. },
+  { "prover": "Alt-Ergo:2.3.2", "verdict": "timeout", "time": 10. },
+  { "prover": "script", "verdict": "valid" },
+  { "header": "Split", "tactic": "Wp.split", "params": {},
+    "select": { "select": "clause-step", "at": 15, "kind": "branch",
+                "target": "i_2<Mint_0[(shiftfield_F1_memb_num m_0)]",
+                "pattern": "<$i[]$Mintshiftfield_F1_memb_num" },
+    "children": { "Then": [ { "prover": "CVC4:1.7", "verdict": "valid",
+                              "time": 0.09 },
+                            { "prover": "Alt-Ergo:2.3.2", "verdict": "valid",
+                              "time": 0.0623, "steps": 207 } ],
+                  "Else": [ { "prover": "Alt-Ergo:2.3.2", "verdict": "valid",
+                              "time": 0.0846, "steps": 231 } ] } } ]

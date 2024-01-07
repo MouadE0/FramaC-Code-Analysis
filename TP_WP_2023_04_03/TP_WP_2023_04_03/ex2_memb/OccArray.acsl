@@ -1,0 +1,122 @@
+/*
+  Axiomatic and properties related to occurence counting of a specific
+  element in an array.
+
+  Modified to use arrays of char rather than arrays of int.
+
+  Reference:
+    Blanchard Allan, Nikolai Kosmatov, Matthieu Lemerre, Frédéric Loulergue. A
+    case study on formal verification of the Anaxagoros hypervisor paging
+    system with Frama-C. International Workshop on Formal Methods for
+    Industrial Critical Systems (FMICS), Jun 2015, Oslo, Norway. Springer,
+    2015, <http://fmics2015.org>. <hal-01140271>
+    https://hal.inria.fr/hal-01140271
+*/
+
+/*@
+  // occ_a (elt, tab, from, to) counts occurrences of element elt among the elements 
+  // in array of characters tab between the indices from (included) and to (excluded)
+  axiomatic OccArray{
+    logic integer occ_a{L}(integer e, char *t, integer from, integer to) 
+      reads t[from .. (to - 1)];
+    axiom end_occ_a{L}:
+      \forall integer e, char *t, integer from, to; from >= to ==> 
+        occ_a{L}(e, t, from, to) == 0;
+    axiom iter_occ_a_true{L}:
+      \forall integer e, char *t, integer from, to; (from < to && t[to-1] == e) ==> 
+        occ_a{L}(e, t, from, to) == occ_a{L}(e, t, from, to-1) + 1;
+// TODO3: specify the missing case of the definition of occ_a
+//    axiom iter_occ_a_false{L}:
+//      ...;
+  }
+*/
+/*@
+  //split the array into two segments and add the results
+  lemma occ_a_separable{L}:
+    \forall integer e, char *t, integer from, cut, to;
+      from <= cut <= to ==> 
+      occ_a{L}(e,t,from,to) == occ_a{L}(e,t,from,cut)+occ_a{L}(e,t,cut,to);
+*/
+/*@
+  //no element changed between labels L1,L2
+  predicate same_elems{L1,L2}(char *t, integer from, integer to) =
+    \forall integer j; from <= j < to ==> \at(t[j], L1) == \at(t[j], L2);
+*/
+/*@
+  //same number of occurrences for an unchanged array
+  lemma same_elems_means_same_occ_a{L1, L2}:
+    \forall integer e, char *t, integer from, to;
+      same_elems{L1,L2}(t,from,to) ==> occ_a{L1}(e, t, from, to) == occ_a{L2}(e, t, from, to);
+*/
+/*@
+  //exactly one element changed
+  predicate one_change{L1,L2}(integer index, char *t, integer from, integer to) =
+    from <= index < to &&
+    same_elems{L1,L2}(t, from, index) && same_elems{L1,L2}(t, index+1, to) &&
+    \at(t[index], L1) != \at(t[index], L2);
+*/
+/*@
+  //after one change, the count for new increments, for old decrements, others unchanged
+  lemma one_change_means_inc_and_dec{L1, L2}:
+    \forall integer index, char *t, integer from, to;
+      \let at_idx_L1 = \at(t[index],L1); \let at_idx_L2 = \at(t[index],L2);
+      (one_change{L1,L2}(index, t, from, to)) ==> (
+        occ_a{L1}(at_idx_L1, t, from, to)-1 == occ_a{L2}(at_idx_L1, t, from, to) &&
+        occ_a{L1}(at_idx_L2, t, from, to)+1 == occ_a{L2}(at_idx_L2, t, from, to) &&
+        (\forall integer other; other != at_idx_L1 && other != at_idx_L2 ==>
+           occ_a{L1}(other, t, from, to) == occ_a{L2}(other, t, from, to)
+        )
+      );
+*/
+/*@
+  //element not present in array
+  predicate not_in{L}(integer e, char *t, integer from, integer to) =
+    \forall integer j; from <= j < to ==> t[j] != e;
+*/
+/*@
+  //element not present has zero count
+  lemma not_in_means_0_occ_a{L}:
+    \forall integer e, char *t, integer from, to;
+      not_in{L}(e, t, from, to) ==> occ_a{L}(e, t, from, to) == 0;
+*/
+/*@
+  lemma occ_a_positive{L}:
+    \forall integer e, char *t, integer from, to;
+      occ_a{L}(e, t, from, to) >= 0;
+*/
+/*@
+  lemma occ_a_bounded{L}:
+    \forall integer e, char *t, integer from, to;
+      from <= to ==> occ_a{L}(e, t, from, to) <= to - from;
+*/
+/*@
+  lemma zero_occ_a_means_not_in{L}:
+    \forall integer e, char *t, integer from, to;
+      occ_a{L}(e, t, from, to) == 0 ==> not_in{L}(e, t, from, to);
+*/
+/*@
+  predicate everywhere{L}(integer e, char *t, integer from, integer to) =
+    \forall integer j; from <= j < to ==> t[j] == e;
+*/
+/*@
+  lemma everywhere_means_all_occ_a{L}:
+    \forall integer e, char *t, integer from, to;
+      from <= to ==> everywhere{L}(e, t, from, to) ==> occ_a{L}(e, t, from, to) == to - from;
+*/
+/*@
+  lemma all_occ_a_means_everywhere{L}:
+    \forall integer e, char *t, integer from, to;
+      from <= to ==> occ_a{L}(e, t, from, to) == to - from ==> everywhere{L}(e, t, from, to);
+*/
+
+
+// Set memory
+
+/*@ requires valid_s: \valid(s+(0..(n-1)));
+    assigns s[0..(n-1)] \from c;
+    assigns \result \from s;
+    ensures \forall integer i; 0 <= i < n ==> s[i] == c;
+    ensures result_ptr: \result == s;
+*/
+void *memset_char(char *s, int c, int n);
+

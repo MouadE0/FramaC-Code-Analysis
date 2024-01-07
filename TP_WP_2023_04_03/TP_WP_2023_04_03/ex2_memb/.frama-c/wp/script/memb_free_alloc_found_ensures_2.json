@@ -1,0 +1,11 @@
+[ { "prover": "Alt-Ergo:2.4.0", "verdict": "timeout", "time": 10. },
+  { "prover": "native:coq", "verdict": "unknown" },
+  { "prover": "script", "verdict": "valid" },
+  { "header": "Split", "tactic": "Wp.split", "params": {},
+    "select": { "select": "clause-step", "at": 15, "kind": "branch",
+                "target": "i_4<Mint_0[(shiftfield_F1_memb_num m_0)]",
+                "pattern": "<$i[]$Mintshiftfield_F1_memb_num" },
+    "children": { "Then": [ { "prover": "Alt-Ergo:2.4.0", "verdict": "valid",
+                              "time": 0.0709, "steps": 531 } ],
+                  "Else": [ { "prover": "Alt-Ergo:2.4.0", "verdict": "valid",
+                              "time": 0.1258, "steps": 660 } ] } } ]
